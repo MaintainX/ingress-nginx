@@ -854,7 +854,7 @@ controller:
         ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
         ## repository:
         tag: v1.6.7
-        digest: sha256:7c74a715af2c94cb734785b4d3ea1357b4f02b88e1e123c622a9cb68b62f669c
+        digest: ""
         pullPolicy: IfNotPresent
       # -- Provide a priority class name to the webhook patching job
       ##
