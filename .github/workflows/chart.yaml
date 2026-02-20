@@ -12,6 +12,7 @@ on:
 permissions:
   contents: read
   packages: write
+  id-token: write
 
 jobs:
   release:
@@ -46,3 +47,38 @@ jobs:
           CHART_VERSION=$(grep '^version:' charts/ingress-nginx/Chart.yaml | awk '{print $2}')
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           helm push ingress-nginx-${CHART_VERSION}.tgz oci://ghcr.io/${OWNER}/charts
+
+  push-to-ecr:
+    needs: release
+    runs-on: ubuntu-latest
+    environment: Development
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Helm
+        uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
+        with:
+          version: v4.1.1
+
+      - name: Set ECR region
+        run: |
+          AWS_REGION=$(echo "${{ secrets.ECR_REPO }}" | sed 's/.*\.dkr\.ecr\.\([^.]*\)\.amazonaws\.com.*/\1/')
+          echo "AWS_REGION=${AWS_REGION}" >> $GITHUB_ENV
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
+        with:
+          role-to-assume: ${{ secrets.ECR_ROLE_PUSH }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        run: |
+          ECR_REGISTRY=$(echo "${{ secrets.ECR_REPO }}" | cut -d'/' -f1)
+          aws ecr get-login-password | helm registry login ${ECR_REGISTRY} --username AWS --password-stdin
+
+      - name: Package and push chart to ECR
+        run: |
+          helm package charts/ingress-nginx
+          CHART_VERSION=$(grep '^version:' charts/ingress-nginx/Chart.yaml | awk '{print $2}')
+          helm push ingress-nginx-${CHART_VERSION}.tgz oci://${{ secrets.ECR_REPO }}
