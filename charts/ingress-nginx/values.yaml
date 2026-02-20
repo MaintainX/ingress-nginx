@@ -5,7 +5,7 @@
 global:
   image:
     # -- Registry host to pull images from.
-    registry: registry.k8s.io
+    registry: ghcr.io/maintainx/ingress-nginx
 ## Overrides for generated resource names
 # See templates/_helpers.tpl
 # nameOverride:
@@ -31,8 +31,8 @@ controller:
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
     tag: "v1.14.3"
-    digest: sha256:82917be97c0939f6ada1717bb39aa7e66c229d6cfb10dcfc8f1bd42f9efe0f81
-    digestChroot: sha256:ffdab64d0e0556f810d82d618a0fa97c4fc8dc2bc5717c51bfe83b5d4252c73e
+    digest: ""
+    digestChroot: ""
     pullPolicy: IfNotPresent
     runAsNonRoot: true
     # -- This value must not be changed using the official image.
