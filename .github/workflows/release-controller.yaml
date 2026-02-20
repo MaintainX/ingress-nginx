@@ -1,0 +1,73 @@
+name: Build and Push Controller
+
+on:
+  push:
+    branches:
+      - releases/k8s/release-*
+    paths-ignore:
+      - 'docs/**'
+      - 'deploy/**'
+      - '**.md'
+      - 'images/**'
+      - '!images/nginx/**'
+
+  workflow_dispatch:
+    inputs:
+      tag_override:
+        description: 'Override the image tag (defaults to TAG file)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io/${{ github.repository_owner }}/ingress-nginx
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set versions
+        run: |
+          echo "GOLANG_VERSION=$(cat GOLANG_VERSION)" >> $GITHUB_ENV
+          if [ -n "${{ inputs.tag_override }}" ]; then
+            echo "TAG=${{ inputs.tag_override }}" >> $GITHUB_ENV
+          else
+            echo "TAG=$(cat TAG)" >> $GITHUB_ENV
+          fi
+
+      - name: Set up Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
+        with:
+          go-version: ${{ env.GOLANG_VERSION }}
+          check-latest: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+        with:
+          version: latest
+
+      - name: Login to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build binaries and images
+        env:
+          ARCH: amd64
+          TAG: ${{ env.TAG }}
+          REGISTRY: ${{ env.REGISTRY }}
+        run: |
+          make clean-image build image image-chroot
+
+      - name: Push images
+        run: |
+          docker push ${{ env.REGISTRY }}/controller:${{ env.TAG }}
+          docker push ${{ env.REGISTRY }}/controller-chroot:${{ env.TAG }}

@@ -3,8 +3,7 @@ name: Chart
 on:
   push:
     branches:
-      - main
-      - release-*
+      - releases/k8s/release-*
     paths:
       - charts/ingress-nginx/Chart.yaml
   
