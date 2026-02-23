@@ -1,0 +1,22 @@
+name: ingress-nginx
+id: ari:cloud:compass:84e09587-307e-4b5c-9994-fd2a7738c1c6:component/aa4254cb-a8d8-4ad0-a142-7252d70fe7ae/f3e49c57-6f85-4076-bff4-c98f70a4a002
+description: Ingress NGINX Controller for Kubernetes
+configVersion: 1
+typeId: SERVICE
+fields:
+  tier: 4
+links:
+  - name: null
+    type: REPOSITORY
+    url: https://github.com/MaintainX/ingress-nginx
+relationships:
+  DEPENDS_ON: []
+labels:
+  - source:github
+customFields:
+  - name: Default Assignee
+    type: user
+    value: null
+  - name: Project Key
+    type: text
+    value: null
